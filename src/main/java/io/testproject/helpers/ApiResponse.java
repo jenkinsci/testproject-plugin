@@ -118,7 +118,7 @@ public class ApiResponse<TData> {
             if (inputStream == null)
                 return null;
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader in = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
 
             StringBuilder response = new StringBuilder();
             String currentLine;
