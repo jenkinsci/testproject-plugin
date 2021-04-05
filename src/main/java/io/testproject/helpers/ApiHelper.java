@@ -15,7 +15,7 @@ public class ApiHelper {
     private String apiKey;
 
     public ApiHelper(String key) {
-        LogHelper.Debug("Initializing API helper...");
+        LogHelper.Debug(String.format("Initializing API helper. Using API key: %s.............", key.substring(0,4) + "***************"));
         this.apiKey = key;
     }
 
@@ -108,6 +108,8 @@ public class ApiHelper {
                 if (body instanceof File) {
                     con.setFixedLengthStreamingMode(((File) body).length());
 
+                    LogHelper.Debug(String.format("Body is an instance of File. length: [%s]", ((File) body).length()));
+
                     OutputStream out = new BufferedOutputStream(con.getOutputStream());
 
                     out.write(Files.readAllBytes(((File) body).toPath()));
@@ -129,8 +131,6 @@ public class ApiHelper {
                         this.closeQuietly(writer);
                     }
                 }
-
-
             } else if (method.equals("POST") || method.equals("PUT")) {
                 LogHelper.Debug("POST/PUT request with no body...");
                 con.setFixedLengthStreamingMode(0);
@@ -144,6 +144,11 @@ public class ApiHelper {
 
             return new ApiResponse<>(con, clazz);
         } catch (RuntimeException e) {
+            if (e.getMessage() != null)
+                LogHelper.Error(e);
+            else
+                LogHelper.Debug(String.format("Unknown RuntimeException occurred: %s", e));
+
             throw e;
         } catch (Exception e) {
             if (e.getMessage() != null) {

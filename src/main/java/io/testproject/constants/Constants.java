@@ -9,9 +9,11 @@ public class Constants {
     public static final String TP_RUN_JOB_URL = TP_BASE_URL + "/v2/projects/%s/jobs/%s/run";
     public static final String TP_CHECK_EXECUTION_STATE_URL = TP_BASE_URL + "/v2/projects/%s/jobs/%s/executions/%s/state";
     public static final String TP_ABORT_EXECUTION_URL = TP_BASE_URL + "/v2/projects/%s/jobs/%s/executions/%s/abort";
+    public static final String TP_ABORT_TEST_EXECUTION_URL = TP_BASE_URL + "/v2/projects/%s/tests/%s/executions/%s/abort";
     public static final String TP_RETURN_ACCOUNT_AGENTS = TP_BASE_URL + "/v2/agents";
     public static final String TP_RETURN_ACCOUNT_PROJECTS = TP_BASE_URL + "/v2/projects";
     public static final String TP_RETURN_PROJECT_JOBS = TP_BASE_URL + "/v2/projects/%s/jobs";
+    public static final String TP_RETURN_PROJECT_TESTS = TP_BASE_URL + "/v2/projects/%s/tests";
     public static final String TP_RETURN_PROJECT_PARAMETERS = TP_BASE_URL + "/v2/projects/%s/parameters";
     public static final String TP_UPDATE_PROJECT_PARAMETERS = TP_BASE_URL + "/v2/projects/%s/parameters/%s";
     public static final String TP_RETURN_TEST_PACKAGES = TP_BASE_URL + "/v2/projects/%s/test-packages";
@@ -25,6 +27,11 @@ public class Constants {
     public static final String TP_GENERATE_AGENT_CONFIG_TOKEN_URL = TP_BASE_URL + "/v2/agents/config";
     public static final String TP_UPDATE_APP_URL = TP_BASE_URL + "/v2/projects/%s/applications/%s";
     public static final String TP_GET_JUNIT_XML_REPORT = TP_BASE_URL + "/v2/projects/%s/jobs/%s/reports/%s";
+    public static final String TP_GET_JUNIT_XML_TEST_REPORT = TP_BASE_URL + "/v2/projects/%s/tests/%s/reports/%s";
+    public static final String TP_RUN_TEST_URL = TP_BASE_URL + "/v2/projects/%s/tests/%s/run";
+    public static final String TP_CHECK_TEST_EXECUTION_STATE_URL = TP_BASE_URL + "/v2/projects/%s/tests/%s/executions/%s/state";
+    public static final String TP_GET_AGENT_BROWSERS = TP_BASE_URL + "/v2/agents/%s/browsers";
+    public static final String TP_GET_AGENT_DEVICES = TP_BASE_URL + "/v2/agents/%s/devices";
 
     public static final int DEFAULT_CONNECT_TIMEOUT = 90000;
     public static final int DEFAULT_READ_TIMEOUT = 90000;
@@ -35,6 +42,7 @@ public class Constants {
     public static final String ACCEPT = "accept";
 
     public static final String TP_JOB_SYMBOL = "tpJobRun";
+    public static final String TP_TEST_SYMBOL = "tpTestRun";
     public static final String TP_PROJ_PARAM_SYMBOL = "tpProjectParamUpdate";
     public static final String TP_TEST_PACKAGE_SYMBOL = "tpTestPackageUpdate";
     public static final String TP_APP_FILE_SYMBOL = "tpAppUpdateFile";
@@ -43,6 +51,7 @@ public class Constants {
     public static final String TP_GENERATE_AGENT_CONFIG_TOKEN_SYMBOL = "tpAgentConfig";
 
     public static final String TP_JOB_DISPLAY_NAME = "Run TestProject Job";
+    public static final String TP_TEST_DISPLAY_NAME = "Run TestProject Test";
     public static final String TP_PROJ_PARAM_NAME = "Update TestProject Project Parameter";
     public static final String TP_TEST_PACKAGE_NAME = "Update TestProject Test Package";
     public static final String TP_APP_FILE_NAME = "Update TestProject Mobile Application";

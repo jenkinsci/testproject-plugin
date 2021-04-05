@@ -100,7 +100,7 @@ public class GenerateConfig extends Step {
 
     @Override
     public StepExecution start(StepContext stepContext) {
-        LogHelper.SetLogger(stepContext, PluginConfiguration.DESCRIPTOR.isVerbose());
+        LogHelper.SetLogger(stepContext, PluginConfiguration.getInstance().isVerbose());
         return new GenerateConfigExecution(this, stepContext);
     }
 
@@ -160,9 +160,7 @@ public class GenerateConfig extends Step {
 
     @Extension
     public static class DescriptorImpl extends StepDescriptor {
-
-        public DescriptorImpl() {
-        }
+        public DescriptorImpl() {}
 
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
@@ -181,11 +179,23 @@ public class GenerateConfig extends Step {
         }
 
         public ListBoxModel doFillProjectIdItems() {
-            return DescriptorHelper.fillProjectIdItems();
+            try {
+                return DescriptorHelper.fillProjectIdItems(new ApiHelper(PluginConfiguration.getInstance().getApiKey()));
+            } catch (Exception e) {
+                LogHelper.Error(e);
+            }
+
+            return null;
         }
 
         public ListBoxModel doFillJobIdItems(@QueryParameter String projectId) {
-            return DescriptorHelper.fillJobIdItems(projectId);
+            try {
+                return DescriptorHelper.fillJobIdItems(projectId, new ApiHelper(PluginConfiguration.getInstance().getApiKey()));
+            } catch (Exception e) {
+                LogHelper.Error(e);
+            }
+
+            return null;
         }
     }
 }

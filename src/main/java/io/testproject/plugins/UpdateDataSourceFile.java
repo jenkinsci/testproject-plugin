@@ -91,10 +91,6 @@ public class UpdateDataSourceFile extends Builder implements SimpleBuildStep {
     }
     //endregion
 
-    private void init() {
-        this.apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
-    }
-
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
@@ -103,7 +99,9 @@ public class UpdateDataSourceFile extends Builder implements SimpleBuildStep {
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener taskListener) throws InterruptedException, IOException {
         try {
-            LogHelper.SetLogger(taskListener.getLogger(), PluginConfiguration.DESCRIPTOR.isVerbose());
+            PluginConfiguration config = PluginConfiguration.getInstance();
+            this.apiHelper = new ApiHelper(config.getApiKey());
+            LogHelper.SetLogger(taskListener.getLogger(), config.isVerbose());
 
             if (StringUtils.isEmpty(getProjectId()))
                 throw new AbortException("The project id cannot be empty");
@@ -111,7 +109,6 @@ public class UpdateDataSourceFile extends Builder implements SimpleBuildStep {
             if (StringUtils.isEmpty(getDataSourceId()))
                 throw new AbortException("The data source id cannot be empty");
 
-            init();
             updateDataSourceFile(filePath);
         } catch (Exception e) {
             throw new AbortException(e.getMessage());
@@ -138,8 +135,9 @@ public class UpdateDataSourceFile extends Builder implements SimpleBuildStep {
     @Extension
     @Symbol(Constants.TP_DATA_SOURCE_SYMBOL)
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
-
-        public DescriptorImpl() { load(); }
+        public DescriptorImpl() {
+            load();
+        }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
@@ -185,7 +183,13 @@ public class UpdateDataSourceFile extends Builder implements SimpleBuildStep {
         }
 
         public ListBoxModel doFillProjectIdItems() {
-            return DescriptorHelper.fillProjectIdItems();
+            try {
+                return DescriptorHelper.fillProjectIdItems(new ApiHelper(PluginConfiguration.getInstance().getApiKey()));
+            } catch (Exception e) {
+                LogHelper.Error(e);
+            }
+
+            return null;
         }
 
         public ListBoxModel doFillDataSourceIdItems(@QueryParameter String projectId) {
@@ -198,8 +202,7 @@ public class UpdateDataSourceFile extends Builder implements SimpleBuildStep {
 
             ApiResponse<DataSourceData[]> response = null;
             try {
-                ApiHelper apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
-                response = apiHelper.Get(
+                response = new ApiHelper(PluginConfiguration.getInstance().getApiKey()).Get(
                         String.format(Constants.TP_RETURN_DATA_SOURCES, projectId),
                         headers,
                         DataSourceData[].class);
@@ -212,12 +215,12 @@ public class UpdateDataSourceFile extends Builder implements SimpleBuildStep {
                 model.add("Select a data source", "");
                 for (DataSourceData dataSource : response.getData()) {
                     model.add(
-                            dataSource.getName() + " [" + dataSource.getGuid() + "]",
-                            dataSource.getGuid());
+                            dataSource.getName() + " [" + dataSource.getId() + "]",
+                            dataSource.getId());
                 }
 
                 return model;
-            } catch (IOException | NullPointerException e) {
+            } catch (Exception e) {
                 LogHelper.Error(e);
             }
 

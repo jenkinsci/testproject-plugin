@@ -5,13 +5,13 @@ import hudson.util.ListBoxModel;
 import io.testproject.constants.Constants;
 import io.testproject.model.JobData;
 import io.testproject.model.ProjectData;
+import io.testproject.model.TestData;
 import io.testproject.plugins.PluginConfiguration;
 import java.io.IOException;
 import java.util.HashMap;
 
 public class DescriptorHelper {
-
-    public static ListBoxModel fillProjectIdItems() {
+    public static ListBoxModel fillProjectIdItems(ApiHelper apiHelper) {
         HashMap<String, Object> headers = new HashMap<>();
         headers.put(Constants.ACCEPT, Constants.APPLICATION_JSON);
 
@@ -19,7 +19,6 @@ public class DescriptorHelper {
 
         ApiResponse<ProjectData[]> response = null;
         try {
-            ApiHelper apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
             response = apiHelper.Get(Constants.TP_RETURN_ACCOUNT_PROJECTS, headers, ProjectData[].class);
 
             if (!response.isSuccessful()) {
@@ -44,7 +43,7 @@ public class DescriptorHelper {
         return null;
     }
 
-    public static ListBoxModel fillJobIdItems(String projectId) {
+    public static ListBoxModel fillJobIdItems(String projectId, ApiHelper apiHelper) {
         if (projectId.isEmpty()) {
             return new ListBoxModel();
         }
@@ -54,7 +53,6 @@ public class DescriptorHelper {
 
         ApiResponse<JobData[]> response = null;
         try {
-            ApiHelper apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
             response = apiHelper.Get(String.format(Constants.TP_RETURN_PROJECT_JOBS, projectId), headers, JobData[].class);
 
             if (!response.isSuccessful()) {
@@ -69,6 +67,40 @@ public class DescriptorHelper {
                 model.add(
                         job.getName() + " [" + job.getId() + "]",
                         job.getId());
+            }
+
+            return model;
+        } catch (IOException | NullPointerException e) {
+            LogHelper.Error(e);
+        }
+
+        return null;
+    }
+
+    public static ListBoxModel fillTestIdItems(String projectId, ApiHelper apiHelper) {
+        if (projectId.isEmpty()) {
+            return new ListBoxModel();
+        }
+
+        HashMap<String, Object> headers = new HashMap<>();
+        headers.put(Constants.ACCEPT, Constants.APPLICATION_JSON);
+
+        ApiResponse<TestData[]> response = null;
+        try {
+            response = apiHelper.Get(String.format(Constants.TP_RETURN_PROJECT_TESTS, projectId), headers, TestData[].class);
+
+            if (!response.isSuccessful()) {
+                String message = response.generateErrorMessage("Unable to fetch the project's tests list");
+
+                throw new AbortException(message);
+            }
+
+            ListBoxModel model = new ListBoxModel();
+            model.add("Select a test to execute from the selected project (You must select a project first)", "");
+            for (TestData test : response.getData()) {
+                model.add(
+                        test.getName() + " [" + test.getId() + "]",
+                        test.getId());
             }
 
             return model;

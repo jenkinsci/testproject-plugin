@@ -29,6 +29,6 @@ public class GenerateConfigExecution extends SynchronousNonBlockingStepExecution
     }
 
     private void init() {
-        step.setApiHelper(new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey()));
+        step.setApiHelper(new ApiHelper(PluginConfiguration.getInstance().getApiKey()));
     }
 }

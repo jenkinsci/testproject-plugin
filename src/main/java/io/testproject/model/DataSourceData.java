@@ -9,13 +9,9 @@ public class DataSourceData {
      */
     private String id;
     /**
-     * The guid of the data source
-     */
-    private String guid;
-    /**
      * The id of the project that this data source belongs to
      */
-    private long projectId;
+    private String projectId;
     /**
      * The name of the data source
      */
@@ -37,19 +33,11 @@ public class DataSourceData {
         this.id = id;
     }
 
-    public String getGuid() {
-        return guid;
-    }
-
-    public void setGuid(String guid) {
-        this.guid = guid;
-    }
-
-    public long getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(long projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 

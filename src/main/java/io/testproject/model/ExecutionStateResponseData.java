@@ -88,7 +88,8 @@ public class ExecutionStateResponseData {
         return state == ExecutionState.Passed
                 || state == ExecutionState.Failed
                 || state == ExecutionState.Skipped
-                || state == ExecutionState.Error;
+                || state == ExecutionState.Error
+                || state == ExecutionState.Aborted;
     }
 
     public boolean hasFinishedSuccessfully() {
