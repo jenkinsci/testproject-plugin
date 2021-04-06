@@ -91,10 +91,6 @@ public class UpdateApplicationUrl extends Builder implements SimpleBuildStep {
     }
     //endregion
 
-    private void init() {
-        this.apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
-    }
-
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
@@ -103,7 +99,9 @@ public class UpdateApplicationUrl extends Builder implements SimpleBuildStep {
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener taskListener) throws InterruptedException, IOException {
         try {
-            LogHelper.SetLogger(taskListener.getLogger(), PluginConfiguration.DESCRIPTOR.isVerbose());
+            PluginConfiguration config = PluginConfiguration.getInstance();
+            this.apiHelper = new ApiHelper(config.getApiKey());
+            LogHelper.SetLogger(taskListener.getLogger(), config.isVerbose());
 
             if (StringUtils.isEmpty(getProjectId()))
                 throw new AbortException("The project id cannot be empty");
@@ -111,7 +109,6 @@ public class UpdateApplicationUrl extends Builder implements SimpleBuildStep {
             if (StringUtils.isEmpty(getAppId()))
                 throw new AbortException("The application id cannot be empty");
 
-            init();
             updateApplicationUrl();
         } catch (Exception e) {
             throw new AbortException(e.getMessage());
@@ -132,7 +129,7 @@ public class UpdateApplicationUrl extends Builder implements SimpleBuildStep {
                 ApplicationData.class);
 
         if (!response.isSuccessful()) {
-            throw new AbortException(response.generateErrorMessage("Unable to update the project parameter"));
+            throw new AbortException(response.generateErrorMessage("Unable to update the application URL"));
         }
 
         LogHelper.Info(String.format("Successfully updated the application '%s' in project '%s' to URL: '%s'",
@@ -147,7 +144,6 @@ public class UpdateApplicationUrl extends Builder implements SimpleBuildStep {
     @Extension
     @Symbol(Constants.TP_APP_URL_SYMBOL)
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
-
         public DescriptorImpl() {
             load();
         }
@@ -196,7 +192,13 @@ public class UpdateApplicationUrl extends Builder implements SimpleBuildStep {
         }
 
         public ListBoxModel doFillProjectIdItems() {
-            return DescriptorHelper.fillProjectIdItems();
+            try {
+                return DescriptorHelper.fillProjectIdItems(new ApiHelper(PluginConfiguration.getInstance().getApiKey()));
+            } catch (Exception e) {
+                LogHelper.Error(e);
+            }
+
+            return null;
         }
 
         public ListBoxModel doFillAppIdItems(@QueryParameter String projectId) {
@@ -209,8 +211,7 @@ public class UpdateApplicationUrl extends Builder implements SimpleBuildStep {
 
             ApiResponse<ApplicationData[]> response = null;
             try {
-                ApiHelper apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
-                response = apiHelper.Get(String.format(Constants.TP_RETURN_APP_FILE, projectId), headers, ApplicationData[].class);
+                response = new ApiHelper(PluginConfiguration.getInstance().getApiKey()).Get(String.format(Constants.TP_RETURN_APP_FILE, projectId), headers, ApplicationData[].class);
 
                 if (!response.isSuccessful()) {
                     throw new AbortException(response.generateErrorMessage("Unable to fetch the applications list"));
@@ -226,7 +227,7 @@ public class UpdateApplicationUrl extends Builder implements SimpleBuildStep {
                 }
 
                 return model;
-            } catch (IOException | NullPointerException e) {
+            } catch (Exception e) {
                 LogHelper.Error(e);
             }
 

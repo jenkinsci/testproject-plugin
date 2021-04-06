@@ -106,10 +106,6 @@ public class UpdateTestPackage extends Builder implements SimpleBuildStep {
     }
     //endregion
 
-    private void init() {
-        this.apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
-    }
-
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
@@ -118,7 +114,9 @@ public class UpdateTestPackage extends Builder implements SimpleBuildStep {
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener taskListener) throws InterruptedException, IOException {
         try {
-            LogHelper.SetLogger(taskListener.getLogger(), PluginConfiguration.DESCRIPTOR.isVerbose());
+            PluginConfiguration config = PluginConfiguration.getInstance();
+            this.apiHelper = new ApiHelper(config.getApiKey());
+            LogHelper.SetLogger(taskListener.getLogger(), config.isVerbose());
 
             if (StringUtils.isEmpty(getProjectId()))
                 throw new AbortException("The project id cannot be empty");
@@ -126,7 +124,6 @@ public class UpdateTestPackage extends Builder implements SimpleBuildStep {
             if (StringUtils.isEmpty(getTestPackageId()))
                 throw new AbortException("The test package id cannot be empty");
 
-            init();
             updateTestPackage(filePath);
         } catch (Exception e) {
             throw new AbortException(e.getMessage());
@@ -182,8 +179,9 @@ public class UpdateTestPackage extends Builder implements SimpleBuildStep {
     @Extension
     @Symbol(Constants.TP_TEST_PACKAGE_SYMBOL)
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
-
-        public DescriptorImpl() { load(); }
+        public DescriptorImpl() {
+            load();
+        }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
@@ -229,7 +227,13 @@ public class UpdateTestPackage extends Builder implements SimpleBuildStep {
         }
 
         public ListBoxModel doFillProjectIdItems() {
-            return DescriptorHelper.fillProjectIdItems();
+            try {
+                return DescriptorHelper.fillProjectIdItems(new ApiHelper(PluginConfiguration.getInstance().getApiKey()));
+            } catch (Exception e) {
+                LogHelper.Error(e);
+            }
+
+            return null;
         }
 
         public ListBoxModel doFillTestPackageIdItems(@QueryParameter String projectId) {
@@ -242,8 +246,7 @@ public class UpdateTestPackage extends Builder implements SimpleBuildStep {
 
             ApiResponse<TestPackageData[]> response = null;
             try {
-                ApiHelper apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
-                response = apiHelper.Get(String.format(Constants.TP_RETURN_TEST_PACKAGES, projectId), headers, TestPackageData[].class);
+                response = new ApiHelper(PluginConfiguration.getInstance().getApiKey()).Get(String.format(Constants.TP_RETURN_TEST_PACKAGES, projectId), headers, TestPackageData[].class);
 
                 if (!response.isSuccessful()) {
                     throw new AbortException(response.generateErrorMessage("Unable to fetch the test packages list"));
@@ -258,7 +261,7 @@ public class UpdateTestPackage extends Builder implements SimpleBuildStep {
                 }
 
                 return model;
-            } catch (IOException | NullPointerException e) {
+            } catch (Exception e) {
                 LogHelper.Error(e);
             }
 

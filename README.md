@@ -63,6 +63,11 @@ To trigger a job, you need to provide the following parameters:
         }
       ]
     }
+  ],
+  "tags": [
+    "ForCI",
+    "Server",
+    "Lab1"
   ]
 }
 ```
@@ -76,6 +81,47 @@ To trigger a job, you need to provide the following parameters:
 
 ```groovy
 tpJobRun projectId: '<PROJECT_ID>', jobId: '<JOB_ID>', agentId: '<AGENT_ID>', waitJobFinishSeconds: 180, junitResultsFile: '<JUNIT_RESULTS_FILE>', executionParameters: '<EXECUTION_PARAMETERS>'
+```
+
+## Running a TestProject Test
+Using this step, you can trigger TestProject tests as part of your Jenkins build.
+To trigger a test, you need to provide the following parameters:
+* `projectId` - The ID of the project containing the test.
+* `testId` - The ID of the test to execute.
+* `agentId` - The ID of the TestProject agent that will execute the test.
+* `browser` - The name of the browser to execute the test on.
+* `device` - The UDID of the mobile device to execute the test on.
+* `waitTestFinishSeconds` - How many seconds should the step wait for the automation test to finish. If **0** is provided, the setup will not wait for the test to finish execution.
+* `junitResultsFile` _(optional)_ - Path (including the file name) to a file where the JUnit XML report will be stored. The file path can be absolute or relative to your workspace.
+* `executionParameters` _(optional)_ - A JSON object that allows you to override the test's default settings and parameters for a single execution. Here's an example:
+
+```JSON
+{
+  "testParameters": {
+    "ApplicationURL": "https://example.testproject.io",
+    "Email": "example@testproject.io"
+  },
+  "projectParameters": {
+    "Name": "John Doe",
+    "Age": 30
+  },
+  "tags": [
+    "ForCI",
+    "Server",
+    "Lab1"
+  ]
+}
+```
+**Please visit [our API documentation](https://api.testproject.io/docs/v2/#/Tests/Tests_RunTestAsync) to read more about using execution parameters when running a test.**
+
+### Free Style syntax
+ 
+> ![Copy ID](https://storage-static.testproject.io/jenkins/run-test.png)
+
+### Pipeline syntax
+
+```groovy
+tpTestRun projectId: '<PROJECT_ID>', testId: '<TEST_ID>', agentId: '<AGENT_ID>', browser: '<BROWSER_NAME>', waitTestFinishSeconds: 180, junitResultsFile: '<JUNIT_RESULTS_FILE>', executionParameters: '<EXECUTION_PARAMETERS>'
 ```
 
 ## Updating a Mobile Application (apk/ipa) File

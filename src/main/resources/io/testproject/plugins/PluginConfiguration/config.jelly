@@ -1,0 +1,11 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:section title="TestProject Global Configuration">
+        <f:entry title="API Key" field="apiKey" help="/plugin/testproject/help-apiKey.html">
+                <f:password />
+            </f:entry>
+            <f:entry title="Verbose" field="verbose" help="/plugin/testproject/help-verbose.html">
+                <f:checkbox/>
+            </f:entry>
+    </f:section>
+</j:jelly>

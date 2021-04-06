@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
+import hudson.model.Api;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -15,6 +16,7 @@ import hudson.util.ListBoxModel;
 import io.testproject.constants.Constants;
 import io.testproject.helpers.*;
 import io.testproject.model.ApplicationData;
+import jenkins.model.GlobalConfiguration;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -91,10 +93,6 @@ public class UpdateApplicationFile extends Builder implements SimpleBuildStep {
     }
     //endregion
 
-    private void init() {
-        this.apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
-    }
-
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
@@ -103,7 +101,9 @@ public class UpdateApplicationFile extends Builder implements SimpleBuildStep {
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener taskListener) throws InterruptedException, IOException {
         try {
-            LogHelper.SetLogger(taskListener.getLogger(), PluginConfiguration.DESCRIPTOR.isVerbose());
+            PluginConfiguration config = PluginConfiguration.getInstance();
+            this.apiHelper = new ApiHelper(config.getApiKey());
+            LogHelper.SetLogger(taskListener.getLogger(), config.isVerbose());
 
             if (StringUtils.isEmpty(getProjectId()))
                 throw new AbortException("The project id cannot be empty");
@@ -111,7 +111,6 @@ public class UpdateApplicationFile extends Builder implements SimpleBuildStep {
             if (StringUtils.isEmpty(getAppId()))
                 throw new AbortException("The application id cannot be empty");
 
-            init();
             updateApplicationFile(filePath);
         } catch (Exception e) {
             throw new AbortException(e.getMessage());
@@ -138,8 +137,9 @@ public class UpdateApplicationFile extends Builder implements SimpleBuildStep {
     @Extension
     @Symbol(Constants.TP_APP_FILE_SYMBOL)
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
-
-        public DescriptorImpl() { load(); }
+        public DescriptorImpl() {
+            load();
+        }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
@@ -185,7 +185,13 @@ public class UpdateApplicationFile extends Builder implements SimpleBuildStep {
         }
 
         public ListBoxModel doFillProjectIdItems() {
-            return DescriptorHelper.fillProjectIdItems();
+            try {
+                return DescriptorHelper.fillProjectIdItems(new ApiHelper(PluginConfiguration.getInstance().getApiKey()));
+            } catch (Exception e) {
+                LogHelper.Error(e);
+            }
+
+            return null;
         }
 
         public ListBoxModel doFillAppIdItems(@QueryParameter String projectId) {
@@ -198,8 +204,7 @@ public class UpdateApplicationFile extends Builder implements SimpleBuildStep {
 
             ApiResponse<ApplicationData[]> response = null;
             try {
-                ApiHelper apiHelper = new ApiHelper(PluginConfiguration.DESCRIPTOR.getApiKey());
-                response = apiHelper.Get(String.format(Constants.TP_RETURN_APP_FILE, projectId), headers, ApplicationData[].class);
+                response = new ApiHelper(PluginConfiguration.getInstance().getApiKey()).Get(String.format(Constants.TP_RETURN_APP_FILE, projectId), headers, ApplicationData[].class);
 
                 if (!response.isSuccessful()) {
                     throw new AbortException(response.generateErrorMessage("Unable to fetch the applications list"));
@@ -215,7 +220,7 @@ public class UpdateApplicationFile extends Builder implements SimpleBuildStep {
                 }
 
                 return model;
-            } catch (IOException | NullPointerException e) {
+            } catch (Exception e) {
                 LogHelper.Error(e);
             }
 

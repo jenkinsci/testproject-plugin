@@ -1,78 +1,51 @@
 package io.testproject.plugins;
 
 import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.util.FormValidation;
-import io.testproject.constants.Constants;
+import jenkins.model.GlobalConfiguration;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
+@Extension
+@Symbol("tpGlobalConfiguration")
+public class PluginConfiguration extends GlobalConfiguration {
 
-public class PluginConfiguration extends AbstractDescribableImpl<PluginConfiguration> {
+    private String apiKey;
+    private boolean verbose;
 
-    @Extension
-    public static final PluginConfigurationDescriptor DESCRIPTOR = new PluginConfigurationDescriptor();
+    public String getApiKey() {
+        return apiKey;
+    }
 
-    @DataBoundConstructor
+    @DataBoundSetter
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+        save();
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    @DataBoundSetter
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+        save();
+    }
+
     public PluginConfiguration() {
+        load();
+    }
+
+    public static PluginConfiguration getInstance() {
+        return all().get(PluginConfiguration.class);
     }
 
     @Override
-    public Descriptor<PluginConfiguration> getDescriptor() {
-        return DESCRIPTOR;
-    }
-
-    public static final class PluginConfigurationDescriptor extends Descriptor<PluginConfiguration> {
-
-        private String apiKey;
-        private boolean verbose;
-
-        public void setApiKey(String apiKey) {
-            this.apiKey = apiKey;
-        }
-
-        public void setVerbose(boolean verbose) {
-            this.verbose = verbose;
-        }
-
-        public PluginConfigurationDescriptor() {
-            load();
-        }
-
-        @Override
-        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
-            this.apiKey = json.getString("apiKey");
-            this.verbose = json.getBoolean("verbose");
-
-            save();
-
-            return super.configure(req, json);
-        }
-
-        public FormValidation doCheckApiKey(@QueryParameter String value) {
-
-            if (value.isEmpty())
-                return FormValidation.error("Api Key cannot be empty");
-
-            return FormValidation.ok();
-        }
-
-        @Nonnull
-        @Override
-        public String getDisplayName() {
-            return Constants.TP_PLUGIN_CONFIGURATION;
-        }
-
-        public String getApiKey() {
-            return apiKey;
-        }
-
-        public boolean isVerbose() {
-            return verbose;
-        }
+    public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+        req.bindJSON(this, json);
+        save();
+        return true;
     }
 }
